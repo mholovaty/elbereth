@@ -11,69 +11,91 @@
 #include <string>
 #include <iostream>
 #include <sstream>
-
-using namespace std;
+#include <exception>
 
 
 template <typename T>
-T string_to_number(const string &value) {
-	stringstream ss(value);
+T string_to_number(const std::string &value) {
+	std::stringstream ss(value);
 	T result;
-	return ss >> result ? result : 0;
+	ss >> result;
+	return result;
 }
 
 
-void tokenize(const string& str, vector<string>& tokens) {
-	stringstream ss(str);
-	string buf;
+void tokenize(const std::string& str, std::vector<std::string>& tokens) {
+	std::stringstream ss(str);
+	std::string buf;
 
 	while (ss >> buf)
 		tokens.push_back(buf);
 }
 
 
-void print_error() {
-	cout << "error" << endl;
-}
+class CalcException: public std::exception {
+public:
+	virtual const char* what() const throw() {
+    return "error";
+  }
+} calc_exc;
 
 
-void calc(const string& line) {
-	vector<string> tokens;
-	tokenize(line, tokens);
+class Calc {
+public:
+	int eval(const std::string& line) {
+		std::vector<std::string> tokens;
+		tokenize(line, tokens);
 
-	// TODO: Expression parser
+		// TODO: Expression parser
 
-	if (tokens.size() != 3 ) {
-		print_error();
-		return;
+		if (tokens.size() != 3 ) {
+			throw calc_exc;
+		}
+
+		int a = string_to_number<int>(tokens[0]);
+		int b = string_to_number<int>(tokens[2]);
+		std::string sign = tokens[1];
+
+		if (sign == "+") {
+			return a + b;
+		}
+
+		if (sign == "-") {
+			return a - b;
+		}
+
+		if (sign == "*") {
+			return a * b;
+		}
+
+		if (sign == "/") {
+			if (b == 0) throw calc_exc;
+			return a / b;
+		}
+
+		throw calc_exc;
 	}
+};
 
-	int a = string_to_number<int>(tokens[0]);
-	int b = string_to_number<int>(tokens[2]);
-	string sign = tokens[1];
 
-	if (sign == "+") {
-		cout << a + b << endl;
-	} else if (sign == "-") {
-		cout << a - b << endl;
-	} else {
-		print_error();
-	}
+bool readline(const std::string& prompt, std::string& line) {
+	std::cout << std::endl << prompt;
+	return std::getline(std::cin, line);
 }
 
 
-bool readline(const string& prompt, string& line) {
-	cout << prompt;
-	return getline(cin, line);
-}
+int main() {
+	std::string line;
+	std::string prompt = "> ";
 
-
-int main(void) {
-	string line;
-	string prompt = "\n> ";
+	Calc calc;
 
 	while (readline(prompt, line)) {
-		calc(line);
+		try {
+			std::cout << calc.eval(line) << std::endl;
+		} catch (CalcException& e) {
+			std::cout << e.what() << std::endl;
+		}
 	}
 
 	return 0;
