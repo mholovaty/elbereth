@@ -4,30 +4,30 @@
 
 struct Tokens {
 
-	std::string& str;
-	std::string::iterator it;
+	std::string::iterator begin;
+	std::string::iterator end;
 
-	Tokens(std::string& str): str(str) {
-		it = str.begin();
-	}
+	Tokens(std::string::iterator begin, std::string::iterator end): begin(begin), end(end) {}
 
 	bool operator>>(std::string& token) {
 
+		if (begin == end) return false;
+
 		char c;
 
-		while (it != str.end()) {
-			c = *it;
+		while (begin != end) {
+			c = *begin;
 
-			if (c == ' ' || c == '\0') {
-				token.push_back('\0');
+			if (c == ' ') {
+				begin++;
 				break;
+			} else {
+				begin++;
+				token.push_back(c);
 			}
-
-			token.push_back(c);
-			++it;
 		}
 
-		return it != str.end();
+		return true;
 	}
 
 };
@@ -38,7 +38,7 @@ void print_tokens(const char* str, char sep) {
 	char c;
 	int i = 0;
 	while (true) {
-		char c = *(str + i);
+		c = *(str + i);
 
 		if (c == sep)
 			std::cout << std::endl;
@@ -55,23 +55,21 @@ void print_tokens(const char* str, char sep) {
 }
 
 
-int main(void) {
+int main() {
 	// Case 1
 	print_tokens("foo bar", ' ');
 
 	// Case 2
 	std::string s = "foo bar";
-	std::string buf;
 
-	Tokens tokenize1(s);
+	Tokens tokenize(s.begin(), s.end());
 
-	assert(tokenize1.operator>>(buf));
-	assert(!tokenize1.operator>>(buf));  // Fails
-
-	Tokens tokenize2(s);
-	while (tokenize2 >> buf) {
-		std::cout << buf << std::endl;
+	// TODO: This construction is clumsy. Think how to make it better
+	while(true) {
+		std::string token;
+		if (tokenize >> token)
+			std::cout << token << std::endl;
+		else break;
 	}
-
 
 }
