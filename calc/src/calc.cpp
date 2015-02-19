@@ -15,7 +15,8 @@
 
 
 template <typename T>
-T string_to_number(const std::string &value) {
+T string_to_number(const std::string &value)
+{
 	std::stringstream ss(value);
 	T result;
 	ss >> result;
@@ -23,7 +24,8 @@ T string_to_number(const std::string &value) {
 }
 
 
-void tokenize(const std::string& str, std::vector<std::string>& tokens) {
+void tokenize(const std::string& str, std::vector<std::string>& tokens)
+{
 	std::stringstream ss(str);
 	std::string buf;
 
@@ -32,71 +34,121 @@ void tokenize(const std::string& str, std::vector<std::string>& tokens) {
 }
 
 
-class CalcException: public std::exception {
+class EvalError: public std::exception
+{
 public:
 	virtual const char* what() const throw() {
-    return "error";
+    return "evaluation error";
   }
-} calc_exc;
+} eval_error;
 
 
-class Calc {
+float eval(const std::string& line)
+{
+	std::vector<std::string> tokens;
+	tokenize(line, tokens);
+
+	std::string out;
+
+	// TODO: Expression parser
+
+	if (tokens.size() != 3 ) {
+		throw eval_error;
+	}
+
+	float a = string_to_number<float>(tokens[0]);
+	float b = string_to_number<float>(tokens[2]);
+	std::string sign = tokens[1];
+
+	if (sign == "+") {
+		return a + b;
+	}
+
+	if (sign == "-") {
+		return a - b;
+	}
+
+	if (sign == "*") {
+		return a * b;
+	}
+
+	if (sign == "/") {
+		if (b == 0) throw eval_error;
+		return a / b;
+	}
+
+	throw eval_error;
+}
+
+class ICalculator {
 public:
-	int eval(const std::string& line) {
-		std::vector<std::string> tokens;
-		tokenize(line, tokens);
 
-		// TODO: Expression parser
+	/* Consumes and parses a line of input.
+	 *  On success, produces one lie of output, on error, throws and exception.
+	 */
+	virtual void OnInput(const std::string& line) = 0;
+};
 
-		if (tokens.size() != 3 ) {
-			throw calc_exc;
+
+class IOutput {
+public:
+
+	virtual void PrintOutput(const std::string& out) = 0;
+};
+
+
+class Calculator: public ICalculator
+{
+public:
+	IOutput& output;
+
+	Calculator(IOutput& output): output(output) {};
+
+	void OnInput(const std::string& line) {
+		try
+		{
+			std::ostringstream convert;
+
+			convert << eval(line);
+
+			output.PrintOutput(convert.str());
+
+		} catch (EvalError& e) {
+			output.PrintOutput(e.what());
 		}
-
-		int a = string_to_number<int>(tokens[0]);
-		int b = string_to_number<int>(tokens[2]);
-		std::string sign = tokens[1];
-
-		if (sign == "+") {
-			return a + b;
-		}
-
-		if (sign == "-") {
-			return a - b;
-		}
-
-		if (sign == "*") {
-			return a * b;
-		}
-
-		if (sign == "/") {
-			if (b == 0) throw calc_exc;
-			return a / b;
-		}
-
-		throw calc_exc;
 	}
 };
 
 
-bool readline(const std::string& prompt, std::string& line) {
-	std::cout << std::endl << prompt;
-	return std::getline(std::cin, line);
-}
-
-
-int main() {
-	std::string line;
+class Console: public IOutput
+{
+public:
 	std::string prompt = "> ";
-
-	Calc calc;
-
-	while (readline(prompt, line)) {
-		try {
-			std::cout << calc.eval(line) << std::endl;
-		} catch (CalcException& e) {
-			std::cout << e.what() << std::endl;
-		}
+	
+	std::basic_istream<char>& ReadInput(std::string& line)
+	{
+		std::cout << std::endl << prompt;
+		return std::getline(std::cin, line);
 	}
+	
+
+	void PrintOutput(const std::string& out)
+	{
+		std::cout << out << std::endl;
+	}
+
+};
+
+
+int main()
+{
+	std::string line;
+
+	Console console;
+	Calculator calculator(console);
+
+	while (console.ReadInput(line))
+			calculator.OnInput(line);
 
 	return 0;
 }
