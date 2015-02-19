@@ -85,7 +85,7 @@ class ICalculator {
 public:
 
 	/* Consumes and parses a line of input.
-	 *  On success, produces one lie of output, on error, throws and exception.
+	 *  On success, produces one line of output, on error, throws and exception.
 	 */
 	virtual void OnInput(const std::string& line) = 0;
 };
@@ -149,7 +149,7 @@ int main()
 	Calculator calculator(console);
 
 	while (console.ReadInput(line))
-			calculator.OnInput(line);
+		calculator.OnInput(line);
 
 	return 0;
 }
