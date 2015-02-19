@@ -38,7 +38,7 @@ class EvalError: public std::exception
 {
 public:
 	virtual const char* what() const throw() {
-    return "evaluation error";
+    return "error";
   }
 } eval_error;
 
