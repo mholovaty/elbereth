@@ -37,9 +37,10 @@ void tokenize(const std::string& str, std::vector<std::string>& tokens)
 class EvalError: public std::exception
 {
 public:
-	virtual const char* what() const throw() {
-    return "error";
-  }
+	virtual const char* what() const throw()
+	{
+		return "error";
+	}
 } eval_error;
 
 
