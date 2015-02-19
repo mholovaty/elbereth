@@ -78,7 +78,7 @@ public:
 };
 
 
-bool readline(const std::string& prompt, std::string& line) {
+std::basic_istream<char> readline(const std::string& prompt, std::string& line) {
 	std::cout << std::endl << prompt;
 	return std::getline(std::cin, line);
 }
